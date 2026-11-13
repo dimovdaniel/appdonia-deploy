@@ -80,3 +80,7 @@ first deploy. It does not commit, push, or build anything unless you ask.
 | `SKILL.md`           | The rules every stack follows and the workflow       |
 | `stacks/laravel.md`  | The Laravel guide: what to inspect, adapt, validate  |
 | `templates/laravel/` | Known-good baseline files the skill adapts           |
+
+## License
+
+[MIT](LICENSE)
