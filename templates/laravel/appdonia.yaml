@@ -1,0 +1,79 @@
+# documentation: https://example.com/docs
+# slogan: One sentence describing the product.
+# category: productivity
+# tags: laravel,php,mariadb
+# logo: svgs/app.svg
+# port: 8000
+
+# Initial admin login: set ADMIN_EMAIL (default admin@example.com) and
+# ADMIN_PASSWORD under Environment Variables before the first deploy. Without
+# ADMIN_PASSWORD no admin user is created.
+# ADAPT: if the app has its own settings screen (mail, integrations, ...), say
+# here that those values are configured in the app and must not be added as
+# environment variables. Otherwise remove this note.
+
+# ADAPT: rename the "app" service to the product name (one lower-case word) and
+# rename SERVICE_URL_APP_8000 / SERVICE_URL_APP to match. Use the
+# port and container paths of the project's image instead of 8000 and /var/www.
+
+services:
+  app:
+    # ADAPT: <business> is the name the user gave, <project> comes from the
+    # project. Literal URL, lower case, no variable.
+    image: registry.gitlab.com/appdonia/<business>/<project>:latest
+    command: ["web"]
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      - SERVICE_URL_APP_8000
+      - APP_NAME=${APP_NAME:-App}
+      - APP_ENV=production
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_KEY=base64:$SERVICE_REALBASE64_32_APPKEY
+      - APP_URL=${SERVICE_URL_APP}
+      - APP_PORT=8000
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=${MARIADB_DATABASE:-app}
+      - DB_USERNAME=$SERVICE_USER_MARIADB
+      - DB_PASSWORD=$SERVICE_PASSWORD_MARIADB
+      - QUEUE_CONNECTION=database
+      - RUN_QUEUE_WORKER=true
+      - RUN_SCHEDULER=true
+      - ADMIN_NAME=${ADMIN_NAME:-Admin}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    volumes:
+      - app-storage:/var/www/storage
+      # ADAPT: one more volume per directory outside storage/ that the app
+      # writes user files to, e.g.  - app-uploads:/var/www/public/uploads
+    healthcheck:
+      # ADAPT: a route that returns 200 without login (/up on Laravel 11+).
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:8000/up || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 300s
+
+  mariadb:
+    image: mariadb:10.11
+    restart: always
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    environment:
+      - MARIADB_DATABASE=${MARIADB_DATABASE:-app}
+      - MARIADB_USER=$SERVICE_USER_MARIADB
+      - MARIADB_PASSWORD=$SERVICE_PASSWORD_MARIADB
+      - MARIADB_ROOT_PASSWORD=$SERVICE_PASSWORD_MARIADBROOT
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  app-storage:
+  mariadb-data:
