@@ -11,7 +11,7 @@ Templates are in `templates/laravel/`:
 | `EnsureAdminUser.php`  | `app/Console/Commands/EnsureAdminUser.php` | only if nothing creates the admin from env  |
 | `SeedIfNeeded.php`     | `app/Console/Commands/SeedIfNeeded.php`    | only if seeding is not already run-once     |
 
-The templates use placeholder names (`app`, `<business>`, `<project>`,
+The templates use placeholder names (`app`, `<gitlab-path>`, `<project>`,
 port 8000, `/var/www`). Replace every one of them with what the project
 actually uses; if the project's image serves on another port or lives in
 another directory, the yaml follows the project, not the template.
@@ -159,7 +159,7 @@ repository's container registry, which is the URL `docker/appdonia.yaml` uses.
 - One that already builds and pushes to `$CI_REGISTRY_IMAGE`: leave it alone.
 
 The job tags `latest` from the default branch and `x.y.z` from `vx.y.z` git
-tags. It uses `$CI_REGISTRY_IMAGE`, so it needs no edits when the business or
+tags. It uses `$CI_REGISTRY_IMAGE`, so it needs no edits when the GitLab path or
 project name changes.
 
 ## 5. docker/appdonia.yaml
@@ -178,8 +178,8 @@ Start from the template and adapt:
   and rename `SERVICE_URL_APP_8000` / `SERVICE_URL_APP` to match
   (`SERVICE_URL_<NAME>_8000`).
 - **Image**: the literal URL
-  `registry.gitlab.com/appdonia/<business>/<project>:latest`, with the
-  business name the user gave and the project name taken from the project
+  `registry.gitlab.com/<gitlab-path>/<project>:latest`, with the author's
+  own GitLab path and the project name taken from the project
   (see "Image name" in `SKILL.md`). No variable, no default syntax.
 - **Database**: the template uses MariaDB. For PostgreSQL, swap the service
   (`postgres:16`, `POSTGRES_DB/USER/PASSWORD`, healthcheck
@@ -221,7 +221,7 @@ php -l app/Console/Commands/EnsureAdminUser.php
 ```
 
 ```bash
-grep -rnE "ADAPT:|<business>|<project>" docker/appdonia.yaml docker-entrypoint.sh Dockerfile .gitlab-ci.yml app/Console/Commands
+grep -rnE "ADAPT:|<gitlab-path>|<project>" docker/appdonia.yaml docker-entrypoint.sh Dockerfile .gitlab-ci.yml app/Console/Commands
 ```
 
 `docker compose config` warns that the `SERVICE_*` variables are not set. That
@@ -231,7 +231,7 @@ Then check by reading:
 
 - [ ] no `build:`, `ports:`, `container_name:`, `networks:` or bind mounts
 - [ ] the app `image:` is a literal
-      `registry.gitlab.com/appdonia/<business>/<project>:latest`, lower case,
+      `registry.gitlab.com/<gitlab-path>/<project>:latest`, lower case,
       with no `${...}` and no placeholder left in it
 - [ ] every service has a healthcheck; `depends_on` uses `service_healthy`
 - [ ] `SERVICE_URL_<NAME>_<port>` matches the service name and the port the

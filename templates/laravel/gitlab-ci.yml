@@ -1,6 +1,6 @@
 # Builds the image for Appdonia - platform deployment and pushes it to this
 # project's GitLab container registry:
-#   registry.gitlab.com/appdonia/<business>/<project>
+#   registry.gitlab.com/<gitlab-path>/<project>
 # Pushes to the default branch publish "latest"; a git tag v1.2.0 publishes
 # "1.2.0".
 

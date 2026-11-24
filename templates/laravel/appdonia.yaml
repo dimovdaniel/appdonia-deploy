@@ -18,9 +18,9 @@
 
 services:
   app:
-    # ADAPT: <business> is the name the user gave, <project> comes from the
-    # project. Literal URL, lower case, no variable.
-    image: registry.gitlab.com/appdonia/<business>/<project>:latest
+    # ADAPT: <gitlab-path> is the author's own GitLab group or username,
+    # <project> comes from the project. Literal URL, lower case, no variable.
+    image: registry.gitlab.com/<gitlab-path>/<project>:latest
     command: ["web"]
     depends_on:
       mariadb:

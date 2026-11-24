@@ -65,13 +65,37 @@ In the project you want to deploy:
 Add your own instructions after the stack; they win over the skill's defaults:
 
 ```
-/appdonia-deploy laravel "use PostgreSQL, business name is acme"
+/appdonia-deploy laravel "use PostgreSQL, GitLab path is acme"
 ```
 
-Or just ask: "make this project deployable on Appdonia". The skill asks for
-your business name (your subgroup in the `appdonia` GitLab group) if it cannot
-find it, then reports the files it wrote and the variables to set before the
-first deploy. It does not commit, push, or build anything unless you ask.
+Or just ask: "make this project deployable on Appdonia". The skill finds your
+GitLab path (your GitLab group or username) from the Appdonia MCP server or the
+git remote, and asks for it if it cannot. Then it reports the files it wrote
+and the variables to set before the first deploy. It does not commit, push, or
+build anything unless you ask.
+
+## Your GitLab
+
+The image stays in your own GitLab:
+`registry.gitlab.com/<your-gitlab-path>/<project>`. Invite the Appdonia deploy
+account, **`@mobidonia-deploy`**, to the project that holds the image, with the
+**Maintainer** role, so Appdonia can create the short-lived tokens that pull
+the image for each install.
+
+## Submit the item with the Appdonia MCP server
+
+With the Appdonia MCP server connected, your agent also creates the item,
+fills in the Docker settings, description, prices and images, and sends it for
+review when you ask. Create your token on Appdonia under
+**Portfolio > Submit with AI** and run the command shown there, for example:
+
+```bash
+claude mcp add --transport http appdonia https://appdonia.com/mcp/authors --header "Authorization: Bearer YOUR_TOKEN"
+```
+
+The MCP server also carries this skill (tool `get-deploy-guide`), so an agent
+that has only the MCP server can follow it without installing anything.
+Guide: https://appdonia.com/help-center/authors/submit-item
 
 ## What is inside
 

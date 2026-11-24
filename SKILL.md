@@ -64,7 +64,7 @@ correctly.
 
 - Prebuilt images only. Every service has `image:`; never `build:`.
 - The app image is written as a literal URL, never through a variable:
-  `image: registry.gitlab.com/appdonia/<business>/<project>:latest`
+  `image: registry.gitlab.com/<gitlab-path>/<project>:latest`
   (see "Image name" below).
 - No `ports:`, `container_name:`, `networks:`, or host bind mounts. Appdonia
   routes traffic and names containers itself. Use named volumes only.
@@ -95,18 +95,26 @@ correctly.
 
 ## Image name
 
-All app images live in the GitLab container registry, under the `appdonia`
-group. Every author has their own subgroup there, named after their business:
+The app image lives in the **author's own GitLab**, in the container registry
+of the project that holds the code (or of a separate project, if the author
+does not want to share the source):
 
 ```
-registry.gitlab.com/appdonia/<business>/<project>:latest
+registry.gitlab.com/<gitlab-path>/<project>:latest
 ```
 
-- **`<business>`** is the author's subgroup. **Ask the user for it** before
-  writing any file: "What is your business name (your subgroup in the appdonia
-  GitLab group)?" Skip the question only if the custom instructions give it,
-  or the project's git remote already points to
-  `gitlab.com/appdonia/<business>/...`, in which case use that and say so.
+- **`<gitlab-path>`** is the author's GitLab group or username, with any
+  subgroups (`acme` or `acme/apps`). It is the path that is connected to their
+  Appdonia author account; Appdonia only accepts a private image below it.
+  Find it in this order, and say which source you used:
+  1. the custom instructions;
+  2. the Appdonia MCP server, if it is connected: `get-account` returns it as
+     `gitlab.path`, and the ready prefix as `gitlab.image_prefix`;
+  3. the project's git remote, if it points to GitLab
+     (`gitlab.com/<gitlab-path>/<project>`);
+  4. otherwise **ask the user**: "What is your GitLab group or username (the
+     one connected to your Appdonia account)?"
+
   Never guess it from the project, the vendor name in `composer.json`, or this
   skill.
 - **`<project>`** comes from the project: the repository name from the git
@@ -117,9 +125,21 @@ registry.gitlab.com/appdonia/<business>/<project>:latest
   ("My Business" becomes `my-business`). If the user gives a name that needs
   changing, show them the slug you will use.
 
-The image is built from the project's `Dockerfile` by GitLab CI in the
-project's own repository, `gitlab.com/appdonia/<business>/<project>`, which is
-what makes the registry path above exist.
+The image is built from the project's `Dockerfile` by GitLab CI in that
+project, `gitlab.com/<gitlab-path>/<project>`, which is what makes the registry
+path above exist.
+
+### Access for Appdonia
+
+Appdonia pulls the image with a short-lived, read-only token it creates for
+each install. For that, the author invites the Appdonia deploy account,
+**`@mobidonia-deploy`**, to the GitLab project that holds the image, with the
+**Maintainer** role (GitLab: **Manage > Members > Invite members**). Tell the
+user to do this; you cannot do it for them. If `get-account` says the GitLab
+is not connected yet, the author also tells Appdonia their GitLab group or
+username once, so it is linked to their author account.
+
+A stack that uses only public images needs none of this.
 
 ## Platform-generated variables
 
@@ -145,7 +165,7 @@ generated variable names stay unambiguous.
 
 ## Workflow
 
-1. **Get the business name** as described under "Image name", unless it is
+1. **Get the GitLab path** as described under "Image name", unless it is
    already known. Then **read the stack guide** from the table above and the
    templates it names.
 2. **Inspect the project** as the guide describes. Read what exists before
@@ -162,9 +182,32 @@ generated variable names stay unambiguous.
      `docker/appdonia.yaml`, which rule required it;
    - the variables the deployer must set before the first deploy;
    - the image URL `docker/appdonia.yaml` points to, and that the project
-     must be pushed to `gitlab.com/appdonia/<business>/<project>` so CI builds
+     must be pushed to `gitlab.com/<gitlab-path>/<project>` so CI builds
      that image before the first deploy;
+   - that `@mobidonia-deploy` must be a Maintainer of that GitLab project
+     (see "Access for Appdonia");
+   - how to put it on Appdonia (see "Submitting to Appdonia");
    - anything you assumed or could not verify (for example, that you did not
      build the image or boot the containers).
 
 Do not commit, push, build or publish images unless the user asks.
+
+## Submitting to Appdonia
+
+The file becomes the **Docker Settings** of the author's item on Appdonia.
+
+- **With the Appdonia MCP server connected** (tools `get-account`,
+  `create-item`, `update-item`, `submit-item`): offer to do it. Look for the
+  item with `list-items` first. Send the content of `docker/appdonia.yaml` as
+  `docker_compose` and the app image with its tag as `private_image`, together
+  with the title, descriptions and category. Ask the user for the prices; never
+  make them up. The item is saved as a draft. Call `submit-item` only when the
+  user asks for the review.
+- **Without it**: tell the user to open their item on Appdonia
+  (**Portfolio > Edit > Docker Settings**), paste the file into **Docker
+  Compose (YAML)** and put the image URL with its tag into **Private Image**.
+  The MCP server is set up under **Portfolio > Submit with AI**.
+
+Either way, the user should run **Test install** on the item before sending it
+for review. For a new version: push a `vX.Y.Z` git tag, use that tag in the
+yaml and in the private image, and add a changelog entry on Appdonia.
